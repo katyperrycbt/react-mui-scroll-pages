@@ -23,6 +23,7 @@ const ScrollPages = (props) => {
         containerStyle = {},
         buttonStyle = {},
         buttonIconStyle = {},
+        iconStyle = {},
         gridItemSize: {
             xs, sm, md, lg
         } = {},
@@ -223,8 +224,8 @@ const ScrollPages = (props) => {
                     zIndex: 10,
                     ...buttonStyle
                 }} >
-                    <IconButton aria-label="left" onClick={handleBackAction}>
-                        <ArrowBackIcon fontSize="large" sx={buttonIconStyle} />
+                    <IconButton aria-label="left" onClick={handleBackAction} sx={buttonIconStyle}>
+                        <ArrowBackIcon fontSize="large" sx={iconStyle} />
                     </IconButton>
                 </div>
                 <div style={{
@@ -237,7 +238,7 @@ const ScrollPages = (props) => {
                     ...buttonStyle
                 }}>
                     <IconButton aria-label="left" onClick={handleForwardAction} sx={buttonIconStyle}>
-                        <ArrowForwardIcon fontSize="large" />
+                        <ArrowForwardIcon fontSize="large" sx={iconStyle} />
                     </IconButton>
                 </div>
                 <Grid

@@ -29,6 +29,7 @@ const ScrollPages = props => {
     containerStyle = {},
     buttonStyle = {},
     buttonIconStyle = {},
+    iconStyle = {},
     gridItemSize: {
       xs,
       sm,
@@ -244,10 +245,11 @@ const ScrollPages = props => {
     }, buttonStyle)
   }, /*#__PURE__*/React.createElement(IconButton, {
     "aria-label": "left",
-    onClick: handleBackAction
+    onClick: handleBackAction,
+    sx: buttonIconStyle
   }, /*#__PURE__*/React.createElement(ArrowBackIcon, {
     fontSize: "large",
-    sx: buttonIconStyle
+    sx: iconStyle
   }))), /*#__PURE__*/React.createElement("div", {
     style: _objectSpread({
       position: 'absolute',
@@ -262,7 +264,8 @@ const ScrollPages = props => {
     onClick: handleForwardAction,
     sx: buttonIconStyle
   }, /*#__PURE__*/React.createElement(ArrowForwardIcon, {
-    fontSize: "large"
+    fontSize: "large",
+    sx: iconStyle
   }))), /*#__PURE__*/React.createElement(Grid, {
     ref: gridRef,
     item: true,
