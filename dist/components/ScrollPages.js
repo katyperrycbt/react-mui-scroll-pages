@@ -44,9 +44,7 @@ const ScrollPages = props => {
       ArrowForwardIcon
     },
     getElementSizes,
-    react: {
-      React = {}
-    }
+    React = {}
   } = props;
   const {
     isValidElement,
