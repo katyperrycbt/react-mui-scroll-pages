@@ -1,43 +1,105 @@
-import React, { useRef, useMemo } from 'react';
-
-import {
-    Container, Grid,
-    IconButton, Stack
-} from '@mui/material';
-
-import { useTheme } from "@mui/material/styles";
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+// import React, { useRef, useMemo, useEffect, useState } from 'react';
 
 import { useThisToGetSizesFromRef, useThisToGetPositionFromRef, useWindowSize } from '../utils';
 
 import { debounce } from 'lodash';
 
+
+const muiItemsName = [
+    'Container',
+    'Grid',
+    'IconButton',
+    'Stack',
+    'ArrowBackIcon',
+    'ArrowForwardIcon'
+];
+
 const ScrollPages = (props) => {
 
     const {
-        itemList,
+        children,
         debounceTime = 250,
-        itemStyle,
+        elementStyle = {},
         containerStyle = {},
         buttonStyle = {},
-        BackButton,
-        ForwardButton,
-        xs, sm, md, lg,
+        buttonIconStyle = {},
+        gridItemSize: {
+            xs, sm, md, lg
+        } = {},
+        mui: {
+            Container,
+            Grid,
+            IconButton,
+            Stack,
+            ArrowBackIcon,
+            ArrowForwardIcon
+        },
+        getElementSizes,
+        react: {
+            React = {},
+        }
     } = props;
 
-    const theme = useTheme();
+    const {
+        isValidElement,
+        useRef,
+        useMemo,
+        useEffect,
+        useState,
+        useLayoutEffect
+    } = React;
+
+    const hookConfig = {
+        useState,
+        useLayoutEffect,
+        useEffect
+    }
+
+    const [invalidProps, setInvalidProps] = useState('');
+    const [mounted, setMounted] = useState(0);
+
+    useEffect(() => {
+        [
+            Container,
+            Grid,
+            IconButton,
+            Stack,
+            ArrowBackIcon,
+            ArrowForwardIcon,
+        ].
+            forEach((Component, index) => {
+                if (!Component || !isValidElement(<Component />)) {
+                    setInvalidProps(`${muiItemsName[index]} is not a valid react component`);
+                }
+                setMounted(prev => prev + 1);
+            })
+    }, [Container, Grid, IconButton, Stack, ArrowBackIcon, ArrowForwardIcon, setInvalidProps, setMounted, isValidElement]);
+
     const myRef = useRef(null);
     const gridRef = useRef(null);
     const itemRefs = useRef([]);
 
-    const { width } = useThisToGetSizesFromRef(myRef, { revalidate: 100, timeout: 500 });
-    const { top, height, right, left } = useThisToGetPositionFromRef(gridRef, { revalidate: 100, timeout: 500 });
-    const { width: windowWidth } = useWindowSize();
+    const { width } = useThisToGetSizesFromRef(myRef, {
+        revalidate: 100,
+        timeout: 500,
+        ...hookConfig
+    });
+    const { left, width: gridWidth, height: gridHeight } = useThisToGetPositionFromRef(gridRef, {
+        revalidate: 100,
+        timeout: 500,
+        ...hookConfig
+    });
+    const { width: windowWidth } = useWindowSize(hookConfig);
 
-    const numberOfWords = itemList?.length || 0;
+    useEffect(() => {
+        if (getElementSizes && typeof getElementSizes === 'function') {
+            getElementSizes({ width, height: gridHeight });
+        }
+    }, [width, gridHeight, getElementSizes]);
 
-    const stackLength = width * numberOfWords;
+    const numberOfChildren = children?.length || 0;
+
+    const stackLength = width * numberOfChildren;
 
     const handleBackAction = async () => {
         // find which item is in the middle of the screen
@@ -114,41 +176,70 @@ const ScrollPages = (props) => {
 
         };
         autoScroll();
-    }, debounceTime), [left, width, windowWidth]);
+    }, debounceTime), [left, width, windowWidth, debounceTime]);
 
     const onScroll = () => {
         debounceScroll();
     }
 
+    const EachItem = ({ width, itemRefs, index, children, elementStyle = {}, Grid, isValidGrid }) => {
+        if (!isValidGrid) {
+            return <div>Invalid Grid</div>
+        }
+        return <Grid
+            ref={el => itemRefs.current[index] = el}
+            container
+            direction='column'
+            alignItems='center'
+            wrap='nowrap'
+            sx={{
+                p: 1,
+                width,
+                height: 'auto',
+                '&:hover': {
+                    filter: 'brightness(50%)'
+                },
+                ...elementStyle
+            }}
+        >
+            {children}
+        </Grid>
+    }
+
+    if (invalidProps?.length || mounted !== 6) {
+        return <div>{invalidProps}</div>
+    }
+
     return (
         <Container maxWidth="lg" disableGutters>
-            <Grid container direction="row" mt={[0, 1, 2, 3]} sx={containerStyle}>
+            <Grid container direction="row" mt={[0, 1, 2, 3]} sx={{
+                position: 'relative',
+                ...containerStyle
+            }}>
                 <div style={{
                     position: 'absolute',
-                    top: Math.round(top + height / 2),
-                    left: `calc(${left}px + ${theme.spacing(3)})`,
+                    top: '50%',
+                    left: `0px`,
                     transform: 'translate(-50%, -50%)',
-                    zIndex: 100,
-                    backgroundColor: theme.palette.scroll_button.main,
                     borderRadius: '50%',
+                    zIndex: 10,
                     ...buttonStyle
-                }}>
+                }} >
                     <IconButton aria-label="left" onClick={handleBackAction}>
-                        {BackButton ? <BackButton /> : <ArrowBackIcon fontSize="large" />}
+                        <ArrowBackIcon fontSize="large" sx={buttonIconStyle} />
                     </IconButton>
                 </div>
                 <div style={{
                     position: 'absolute',
-                    top: Math.round(top + height / 2),
-                    left: `calc(${right}px - ${theme.spacing(3)})`,
+                    top: '50%',
+                    left: `calc(${gridWidth}px)`,
                     transform: 'translate(-50%, -50%)',
-                    zIndex: 100,
-                    backgroundColor: theme.palette.scroll_button.main,
                     borderRadius: '50%',
+                    zIndex: 10,
                     ...buttonStyle
                 }}>
-                    <IconButton aria-label="left" onClick={handleForwardAction}>
-                        {ForwardButton ? <ForwardButton /> : <ArrowForwardIcon fontSize="large" />}
+                    <IconButton aria-label="left" onClick={handleForwardAction} sx={buttonIconStyle}>
+                        <ArrowForwardIcon fontSize="large" />
                     </IconButton>
                 </div>
                 <Grid
@@ -165,16 +256,18 @@ const ScrollPages = (props) => {
                     onScroll={onScroll}
                 >
                     <Stack direction="row" sx={{ width: stackLength }}>
-                        {itemList?.length > 0 && itemList.map((item, index) => (
+                        {numberOfChildren > 0 && children.map((eachChild, index) => (
                             <EachItem
                                 key={`render-item-list-${index}`}
-                                item={item}
                                 width={width}
                                 itemRefs={itemRefs}
                                 index={index}
-                                itemStyle={itemStyle}
+                                elementStyle={elementStyle}
+                                Grid={Grid}
+                                isValidGrid={isValidElement(<Grid />)}
+                                React={React}
                             >
-                                {item}
+                                {eachChild}
                             </EachItem>
                         ))}
                     </Stack>
@@ -185,27 +278,7 @@ const ScrollPages = (props) => {
             </Grid>
         </Container >
     );
-};
 
-const EachItem = ({ width, itemRefs, index, children, itemStyle = {} }) => {
-    return <Grid
-        ref={el => itemRefs.current[index] = el}
-        container
-        direction='column'
-        alignItems='center'
-        wrap='nowrap'
-        sx={{
-            p: 1,
-            width,
-            height: 'auto',
-            '&:hover': {
-                filter: 'brightness(50%)'
-            },
-            ...itemStyle
-        }}
-    >
-        {children}
-    </Grid>
-}
+};
 
 export default ScrollPages;

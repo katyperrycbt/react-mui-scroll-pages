@@ -1,33 +1,17 @@
 "use strict";
 
-require("core-js/modules/web.dom-collections.iterator.js");
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
 
+require("core-js/modules/web.dom-collections.iterator.js");
+
 require("core-js/modules/es.promise.js");
-
-var _react = _interopRequireWildcard(require("react"));
-
-var _material = require("@mui/material");
-
-var _styles = require("@mui/material/styles");
-
-var _ArrowBack = _interopRequireDefault(require("@mui/icons-material/ArrowBack"));
-
-var _ArrowForward = _interopRequireDefault(require("@mui/icons-material/ArrowForward"));
 
 var _utils = require("../utils");
 
 var _lodash = require("lodash");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 
@@ -35,44 +19,89 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+const muiItemsName = ['Container', 'Grid', 'IconButton', 'Stack', 'ArrowBackIcon', 'ArrowForwardIcon'];
+
 const ScrollPages = props => {
   const {
-    itemList,
+    children,
     debounceTime = 250,
-    itemStyle,
+    elementStyle = {},
     containerStyle = {},
     buttonStyle = {},
-    BackButton,
-    ForwardButton,
-    xs,
-    sm,
-    md,
-    lg
+    buttonIconStyle = {},
+    gridItemSize: {
+      xs,
+      sm,
+      md,
+      lg
+    } = {},
+    mui: {
+      Container,
+      Grid,
+      IconButton,
+      Stack,
+      ArrowBackIcon,
+      ArrowForwardIcon
+    },
+    getElementSizes,
+    react: {
+      React = {}
+    }
   } = props;
-  const theme = (0, _styles.useTheme)();
-  const myRef = (0, _react.useRef)(null);
-  const gridRef = (0, _react.useRef)(null);
-  const itemRefs = (0, _react.useRef)([]);
+  const {
+    isValidElement,
+    useRef,
+    useMemo,
+    useEffect,
+    useState,
+    useLayoutEffect
+  } = React;
+  const hookConfig = {
+    useState,
+    useLayoutEffect,
+    useEffect
+  };
+  const [invalidProps, setInvalidProps] = useState('');
+  const [mounted, setMounted] = useState(0);
+  useEffect(() => {
+    [Container, Grid, IconButton, Stack, ArrowBackIcon, ArrowForwardIcon].forEach((Component, index) => {
+      if (!Component || !isValidElement( /*#__PURE__*/React.createElement(Component, null))) {
+        setInvalidProps("".concat(muiItemsName[index], " is not a valid react component"));
+      }
+
+      setMounted(prev => prev + 1);
+    });
+  }, [Container, Grid, IconButton, Stack, ArrowBackIcon, ArrowForwardIcon, setInvalidProps, setMounted, isValidElement]);
+  const myRef = useRef(null);
+  const gridRef = useRef(null);
+  const itemRefs = useRef([]);
   const {
     width
-  } = (0, _utils.useThisToGetSizesFromRef)(myRef, {
+  } = (0, _utils.useThisToGetSizesFromRef)(myRef, _objectSpread({
     revalidate: 100,
     timeout: 500
-  });
+  }, hookConfig));
   const {
-    top,
-    height,
-    right,
-    left
-  } = (0, _utils.useThisToGetPositionFromRef)(gridRef, {
+    left,
+    width: gridWidth,
+    height: gridHeight
+  } = (0, _utils.useThisToGetPositionFromRef)(gridRef, _objectSpread({
     revalidate: 100,
     timeout: 500
-  });
+  }, hookConfig));
   const {
     width: windowWidth
-  } = (0, _utils.useWindowSize)();
-  const numberOfWords = (itemList === null || itemList === void 0 ? void 0 : itemList.length) || 0;
-  const stackLength = width * numberOfWords;
+  } = (0, _utils.useWindowSize)(hookConfig);
+  useEffect(() => {
+    if (getElementSizes && typeof getElementSizes === 'function') {
+      getElementSizes({
+        width,
+        height: gridHeight
+      });
+    }
+  }, [width, gridHeight, getElementSizes]);
+  const numberOfChildren = (children === null || children === void 0 ? void 0 : children.length) || 0;
+  const stackLength = width * numberOfChildren;
 
   const handleBackAction = async () => {
     // find which item is in the middle of the screen
@@ -120,7 +149,7 @@ const ScrollPages = props => {
     }
   };
 
-  const debounceScroll = (0, _react.useMemo)(() => (0, _lodash.debounce)(() => {
+  const debounceScroll = useMemo(() => (0, _lodash.debounce)(() => {
     const autoScroll = async () => {
       var _itemRefs$current2, _itemRefs$current3;
 
@@ -154,51 +183,89 @@ const ScrollPages = props => {
     };
 
     autoScroll();
-  }, debounceTime), [left, width, windowWidth]);
+  }, debounceTime), [left, width, windowWidth, debounceTime]);
 
   const onScroll = () => {
     debounceScroll();
   };
 
-  return /*#__PURE__*/_react.default.createElement(_material.Container, {
+  const EachItem = _ref => {
+    let {
+      width,
+      itemRefs,
+      index,
+      children,
+      elementStyle = {},
+      Grid,
+      isValidGrid
+    } = _ref;
+
+    if (!isValidGrid) {
+      return /*#__PURE__*/React.createElement("div", null, "Invalid Grid");
+    }
+
+    return /*#__PURE__*/React.createElement(Grid, {
+      ref: el => itemRefs.current[index] = el,
+      container: true,
+      direction: "column",
+      alignItems: "center",
+      wrap: "nowrap",
+      sx: _objectSpread({
+        p: 1,
+        width,
+        height: 'auto',
+        '&:hover': {
+          filter: 'brightness(50%)'
+        }
+      }, elementStyle)
+    }, children);
+  };
+
+  if (invalidProps !== null && invalidProps !== void 0 && invalidProps.length || mounted !== 6) {
+    return /*#__PURE__*/React.createElement("div", null, invalidProps);
+  }
+
+  return /*#__PURE__*/React.createElement(Container, {
     maxWidth: "lg",
     disableGutters: true
-  }, /*#__PURE__*/_react.default.createElement(_material.Grid, {
+  }, /*#__PURE__*/React.createElement(Grid, {
     container: true,
     direction: "row",
     mt: [0, 1, 2, 3],
-    sx: containerStyle
-  }, /*#__PURE__*/_react.default.createElement("div", {
+    sx: _objectSpread({
+      position: 'relative'
+    }, containerStyle)
+  }, /*#__PURE__*/React.createElement("div", {
     style: _objectSpread({
       position: 'absolute',
-      top: Math.round(top + height / 2),
-      left: "calc(".concat(left, "px + ").concat(theme.spacing(3), ")"),
+      top: '50%',
+      left: "0px",
       transform: 'translate(-50%, -50%)',
-      zIndex: 100,
-      backgroundColor: theme.palette.scroll_button.main,
-      borderRadius: '50%'
+      borderRadius: '50%',
+      zIndex: 10
     }, buttonStyle)
-  }, /*#__PURE__*/_react.default.createElement(_material.IconButton, {
+  }, /*#__PURE__*/React.createElement(IconButton, {
     "aria-label": "left",
     onClick: handleBackAction
-  }, BackButton ? /*#__PURE__*/_react.default.createElement(BackButton, null) : /*#__PURE__*/_react.default.createElement(_ArrowBack.default, {
-    fontSize: "large"
-  }))), /*#__PURE__*/_react.default.createElement("div", {
+  }, /*#__PURE__*/React.createElement(ArrowBackIcon, {
+    fontSize: "large",
+    sx: buttonIconStyle
+  }))), /*#__PURE__*/React.createElement("div", {
     style: _objectSpread({
       position: 'absolute',
-      top: Math.round(top + height / 2),
-      left: "calc(".concat(right, "px - ").concat(theme.spacing(3), ")"),
+      top: '50%',
+      left: "calc(".concat(gridWidth, "px)"),
       transform: 'translate(-50%, -50%)',
-      zIndex: 100,
-      backgroundColor: theme.palette.scroll_button.main,
-      borderRadius: '50%'
+      borderRadius: '50%',
+      zIndex: 10
     }, buttonStyle)
-  }, /*#__PURE__*/_react.default.createElement(_material.IconButton, {
+  }, /*#__PURE__*/React.createElement(IconButton, {
     "aria-label": "left",
-    onClick: handleForwardAction
-  }, ForwardButton ? /*#__PURE__*/_react.default.createElement(ForwardButton, null) : /*#__PURE__*/_react.default.createElement(_ArrowForward.default, {
+    onClick: handleForwardAction,
+    sx: buttonIconStyle
+  }, /*#__PURE__*/React.createElement(ArrowForwardIcon, {
     fontSize: "large"
-  }))), /*#__PURE__*/_react.default.createElement(_material.Grid, {
+  }))), /*#__PURE__*/React.createElement(Grid, {
     ref: gridRef,
     item: true,
     xs: 12,
@@ -210,22 +277,24 @@ const ScrollPages = props => {
     },
     className: "hideScrollBar",
     onScroll: onScroll
-  }, /*#__PURE__*/_react.default.createElement(_material.Stack, {
+  }, /*#__PURE__*/React.createElement(Stack, {
     direction: "row",
     sx: {
       width: stackLength
     }
-  }, (itemList === null || itemList === void 0 ? void 0 : itemList.length) > 0 && itemList.map((item, index) => /*#__PURE__*/_react.default.createElement(EachItem, {
+  }, numberOfChildren > 0 && children.map((eachChild, index) => /*#__PURE__*/React.createElement(EachItem, {
     key: "render-item-list-".concat(index),
-    item: item,
     width: width,
     itemRefs: itemRefs,
     index: index,
-    itemStyle: itemStyle
-  }, item))), /*#__PURE__*/_react.default.createElement(_material.Grid, {
+    elementStyle: elementStyle,
+    Grid: Grid,
+    isValidGrid: isValidElement( /*#__PURE__*/React.createElement(Grid, null)),
+    React: React
+  }, eachChild))), /*#__PURE__*/React.createElement(Grid, {
     container: true,
     direction: "row"
-  }, /*#__PURE__*/_react.default.createElement(_material.Grid, {
+  }, /*#__PURE__*/React.createElement(Grid, {
     ref: myRef,
     item: true,
     xs: xs || 12,
@@ -233,31 +302,6 @@ const ScrollPages = props => {
     md: md || 4,
     lg: lg || 3
   })))));
-};
-
-const EachItem = _ref => {
-  let {
-    width,
-    itemRefs,
-    index,
-    children,
-    itemStyle = {}
-  } = _ref;
-  return /*#__PURE__*/_react.default.createElement(_material.Grid, {
-    ref: el => itemRefs.current[index] = el,
-    container: true,
-    direction: "column",
-    alignItems: "center",
-    wrap: "nowrap",
-    sx: _objectSpread({
-      p: 1,
-      width,
-      height: 'auto',
-      '&:hover': {
-        filter: 'brightness(50%)'
-      }
-    }, itemStyle)
-  }, children);
 };
 
 var _default = ScrollPages;

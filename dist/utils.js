@@ -9,21 +9,24 @@ exports.useWindowSize = useWindowSize;
 
 require("core-js/modules/web.dom-collections.iterator.js");
 
-var _react = require("react");
+const useIsomorphicLayoutEffect = (useEffect, useLayoutEffect) => typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-const useIsomorphicLayoutEffect = typeof window !== "undefined" ? _react.useLayoutEffect : _react.useEffect;
+const init = {
+  width: 0,
+  height: 0
+};
 
 function useThisToGetSizesFromRef(elRef) {
   let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  const [sizes, setSizes] = (0, _react.useState)({
-    width: 0,
-    height: 0
-  });
   const {
     revalidate,
-    timeout
+    timeout,
+    useState,
+    useLayoutEffect,
+    useEffect
   } = options;
-  useIsomorphicLayoutEffect(() => {
+  const [sizes, setSizes] = useState ? useState(init) : [init, () => {}];
+  useLayoutEffect && useEffect && useIsomorphicLayoutEffect(useEffect, useLayoutEffect)(() => {
     function updateSize() {
       var _elRef$current, _elRef$current2;
 
@@ -56,24 +59,29 @@ function useThisToGetSizesFromRef(elRef) {
   return sizes;
 }
 
+const init2 = {
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  width: 0,
+  height: 0,
+  x: 0,
+  y: 0
+};
+
 function useThisToGetPositionFromRef(elRef) {
   let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  const [position, setPosition] = (0, _react.useState)({
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: 0,
-    height: 0,
-    x: 0,
-    y: 0
-  });
   const {
     revalidate,
-    timeout
+    timeout,
+    useState,
+    useLayoutEffect,
+    useEffect
   } = options;
-  const [oldWidth, setOldWidth] = (0, _react.useState)(0);
-  useIsomorphicLayoutEffect(() => {
+  const [position, setPosition] = useState ? useState(init2) : [init2, () => {}];
+  const [oldWidth, setOldWidth] = useState ? useState(0) : [0, () => {}];
+  useLayoutEffect && useEffect && useIsomorphicLayoutEffect(useEffect, useLayoutEffect)(() => {
     function updatePosition() {
       var _elRef$current3, _elRef$current4;
 
@@ -128,12 +136,19 @@ function useThisToGetPositionFromRef(elRef) {
   return position;
 }
 
-function useWindowSize() {
-  const [size, setSize] = (0, _react.useState)({
-    width: 0,
-    height: 0
-  });
-  (0, _react.useLayoutEffect)(() => {
+const init3 = {
+  width: 0,
+  height: 0
+};
+
+function useWindowSize(options) {
+  const {
+    useState,
+    useLayoutEffect,
+    useEffect
+  } = options;
+  const [size, setSize] = useState ? useState(init3) : [init, () => {}];
+  useLayoutEffect && useEffect && useIsomorphicLayoutEffect(useEffect, useLayoutEffect)(() => {
     function updateSize() {
       setSize({
         width: window.innerWidth,
