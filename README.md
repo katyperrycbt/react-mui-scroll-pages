@@ -78,6 +78,7 @@ const MyCarousel = () => {
 |  elementStyle   |         Object          |  false   |                               |                                     Style of Element container                                      |
 |   buttonStyle   |         Object          |  false   |                               |                               Style of Scroll Back and Forward button                               |
 | buttonIconStyle |         Object          |  false   |                               |                            Style of Scroll Back and Forward icon button                             |
+| iconStyle | Object | false | | Style for SVG/Icon  (MUI icons) |
 |  gridItemSize   |         Object          |  false   | {xs: 12, sm: 6, md: 4, xs: 3} | Number of cols each element takes on different screen sizes. Example: {xs: 12, sm: 6, md: 4, xs: 3} |
 |       mui       | Object of React Element |   true   |                               |               You should pass the object such as from the example above for this prop               |
 | getElementSizes |        Function         |  false   |                               |                             Used to get the sizes of Element if needed                              |
